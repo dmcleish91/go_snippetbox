@@ -9,6 +9,7 @@ import (
 )
 
 type templateData struct {
+	Flash       string
 	Form        any
 	CurrentYear int
 	Snippet     *models.Snippet

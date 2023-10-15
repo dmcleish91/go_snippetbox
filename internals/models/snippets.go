@@ -1,11 +1,9 @@
 package models
 
 import (
-	"context"
+	"database/sql"
 	"fmt"
 	"time"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Snippet struct {
@@ -17,7 +15,7 @@ type Snippet struct {
 }
 
 type SnippetModel struct {
-	DB *pgxpool.Pool
+	DB *sql.DB
 }
 
 func (m *SnippetModel) Insert(title string, content string, expires int) (int, error) {
@@ -26,7 +24,7 @@ func (m *SnippetModel) Insert(title string, content string, expires int) (int, e
 
 	intervalParam := fmt.Sprintf("%v days", expires)
 	var id int
-	err := m.DB.QueryRow(context.Background(), stmt, title, content, intervalParam).Scan(&id)
+	err := m.DB.QueryRow(stmt, title, content, intervalParam).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
@@ -39,7 +37,7 @@ func (m *SnippetModel) Get(id int) (*Snippet, error) {
 	WHERE expires > NOW() and id = $1`
 
 	s := &Snippet{}
-	err := m.DB.QueryRow(context.Background(), stmt, id).Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
+	err := m.DB.QueryRow(stmt, id).Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
 	if err != nil {
 		// errors.Is(err, sql.ErrNoRows) more natural but pgx has a slightly diff err
 		if err.Error() == "no rows in result set" {
@@ -56,7 +54,7 @@ func (m *SnippetModel) Latest() ([]*Snippet, error) {
 	stmt := `SELECT id, title, content, created, expires FROM snippets
 	WHERE expires > NOW() ORDER BY id DESC LIMIT 10`
 
-	rows, err := m.DB.Query(context.Background(), stmt)
+	rows, err := m.DB.Query(stmt)
 	if err != nil {
 		return nil, err
 	}

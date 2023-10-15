@@ -51,7 +51,9 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := app.newTemplateData(r)
+
 	data.Snippet = snippet
+
 	app.render(w, http.StatusOK, "view.tmpl", data)
 }
 
@@ -75,7 +77,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 
 	var form snippetCreateForm
 
-	err = app.formDecoder.Decode(&form, r.PostForm)
+	err = app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
@@ -98,6 +100,9 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		app.serverError(w, err)
 		return
 	}
+
+	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
+
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 
 }
