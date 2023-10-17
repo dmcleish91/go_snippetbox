@@ -218,8 +218,10 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("In userLogoutPost")
 	err := app.sessionManager.RenewToken(r.Context())
 	if err != nil {
+		fmt.Println("In err block")
 		app.serverError(w, err)
 		return
 	}
@@ -227,6 +229,6 @@ func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
 
 	app.sessionManager.Put(r.Context(), "flash", "You've been logged out successfully!")
-
+	fmt.Println("Redirecting to /")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
